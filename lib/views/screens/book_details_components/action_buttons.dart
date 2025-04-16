@@ -184,10 +184,21 @@ class _ActionButtonsState extends State<ActionButtons> {
         ),
       );
     } else {
-      _downloadBook();
+      // Show temporary message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Download will start now. Please wait...'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Start download after a small delay to let the user see the message
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _downloadBook();
+      });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final isDownloading = _downloadProgress > 0 && _downloadProgress < 1;

@@ -129,11 +129,6 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
     });
   }
 
-  void _resetZoom() {
-    setState(() {
-      _zoomLevel = 1.0;
-    });
-  }
 
   void _toggleLock() {
     setState(() {

@@ -6,8 +6,8 @@ plugins {
 
 android {
     namespace = "com.example.pathagar"
-    compileSdk = 34 // Correctly set outside defaultConfig
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35 // Correctly set outside defaultConfig
+    ndkVersion = "27.0.12077973" // Updated NDK version
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -21,7 +21,7 @@ android {
     defaultConfig {
         applicationId = "com.example.pathagar"
         minSdk = 21 // Corrected
-        targetSdk = 34 // Corrected
+        targetSdk = 35 // Corrected
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

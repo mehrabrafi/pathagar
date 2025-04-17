@@ -9,7 +9,7 @@ import 'controllers/book/book_download_service.dart';
 import 'controllers/book/book_preferences.dart';
 import 'controllers/book/book_repository.dart';
 import 'controllers/book/book_storage_service.dart';
-import 'controllers/book_controller.dart';
+import 'controllers/book_controller.dart'; // Add this import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +50,6 @@ void main() async {
     );
   }
 }
-
 class Pathagar extends StatelessWidget {
   const Pathagar({super.key});
 

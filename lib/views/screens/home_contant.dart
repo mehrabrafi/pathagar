@@ -164,50 +164,30 @@ class _HomeContentState extends State<HomeContent> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final screenHeight = constraints.maxHeight;
-        final isPortrait = screenHeight > screenWidth;
-
-        // Calculate cross axis count based on screen width
-        final crossAxisCount = screenWidth < 400 ? 2 : 3;
-
-        // Calculate spacing and padding as percentages of screen width
-        final horizontalPadding = screenWidth * 0.04; // 4% of screen width
-        final spacing = screenWidth * 0.03; // 3% of screen width
-
-        // Calculate available width and item dimensions
+        final isPortrait = constraints.maxHeight > constraints.maxWidth;
+        const horizontalPadding = 16.0;
+        const crossAxisCount = 3;
+        const spacing = 12.0;
         final availableWidth = screenWidth - (2 * horizontalPadding) - ((crossAxisCount - 1) * spacing);
         final itemWidth = availableWidth / crossAxisCount;
-
-        // Calculate aspect ratio based on screen size and orientation
-        final aspectRatio = isPortrait
-            ? (screenHeight < 700 ? 0.6 : 0.55) // Taller screens get slightly squarer cards
-            : 0.7; // Landscape always uses 0.7
-
-        // Calculate image height as a percentage of item width
-        final imageHeight = itemWidth * (isPortrait ? 1.5 : 1.3);
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 500),
           child: Padding(
             key: ValueKey(_displayedBooks.hashCode),
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: GridView.builder(
               physics: const BouncingScrollPhysics(),
               itemCount: _displayedBooks.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                childAspectRatio: aspectRatio,
-                mainAxisSpacing: isPortrait ? screenHeight * 0.03 : screenHeight * 0.02,
+                childAspectRatio: isPortrait ? 0.52 : 0.7,
+                mainAxisSpacing: isPortrait ? 12 : 18,
                 crossAxisSpacing: spacing,
               ),
               itemBuilder: (context, index) {
                 final book = _displayedBooks[index];
-                return _buildBookCard(
-                  context,
-                  book,
-                  itemWidth,
-                  imageHeight,
-                );
+                return _buildBookCard(context, book, itemWidth, isPortrait);
               },
             ),
           ),
@@ -216,21 +196,15 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildBookCard(
-      BuildContext context,
-      Book book,
-      double width,
-      double imageHeight,
-      ) {
+  Widget _buildBookCard(BuildContext context, Book book, double itemWidth, bool isPortrait) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
 
     return BookCard(
       key: ValueKey(book.id),
       book: book,
-      width: width,
-      imageHeight: imageHeight,
+      width: itemWidth,
+      imageHeight: isPortrait ? itemWidth * 1.4 : itemWidth * 1.2,
       isDarkMode: isDarkMode,
       backgroundColor: isDarkMode ? theme.colorScheme.surface : Colors.white,
       textColor: isDarkMode ? theme.colorScheme.onSurface : Colors.black,

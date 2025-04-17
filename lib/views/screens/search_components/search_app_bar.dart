@@ -41,7 +41,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
               : null,
         ),
         style: TextStyle(
-          color: isDarkMode ? Colors.white : Colors.black,
+          color: isDarkMode ? Colors.white : Colors.white,
         ),
         cursorColor: isDarkMode ? Colors.white : Colors.white,
         onChanged: (query) => bookController.searchBooks(query),

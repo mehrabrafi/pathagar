@@ -34,7 +34,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => bookController),
           ChangeNotifierProvider(create: (_) => themeController),
         ],
-        child: const MyApp(),
+        child: const Pathagar(),
       ),
     );
   } catch (e) {
@@ -51,8 +51,8 @@ void main() async {
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Pathagar extends StatelessWidget {
+  const Pathagar({super.key});
 
   @override
   Widget build(BuildContext context) {

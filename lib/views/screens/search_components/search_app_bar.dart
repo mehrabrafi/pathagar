@@ -16,7 +16,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.blueAccent,
       elevation: 1,
       automaticallyImplyLeading: false,
       title: TextField(
@@ -25,7 +25,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
         decoration: InputDecoration(
           hintText: 'Search by title or author...',
           hintStyle: TextStyle(
-            color: isDarkMode ? Colors.white70 : Colors.black54,
+            color: isDarkMode ? Colors.white70 : Colors.white,
           ),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
@@ -43,13 +43,13 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
         style: TextStyle(
           color: isDarkMode ? Colors.white : Colors.black,
         ),
-        cursorColor: isDarkMode ? Colors.white : Colors.blue,
+        cursorColor: isDarkMode ? Colors.white : Colors.white,
         onChanged: (query) => bookController.searchBooks(query),
       ),
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back,
-          color: isDarkMode ? Colors.white : Colors.black,
+          color: isDarkMode ? Colors.white : Colors.white,
         ),
         onPressed: onBackPressed,
       ),

@@ -87,36 +87,6 @@ class _CategoryPageState extends State<CategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isConnected) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.wifi_off,
-                size: 60,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Content not available offline',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Theme.of(context).colorScheme.onBackground,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _initConnectivity,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 600;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
@@ -131,30 +101,60 @@ class _CategoryPageState extends State<CategoryPage> {
             onToggleSearch: _toggleSearch,
             isTablet: isTablet,
           ),
-          if (isTablet && isLandscape)
+          if (!_isConnected)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.wifi_off,
+                      size: 60,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Content not available offline',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.onBackground,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _initConnectivity,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            if (isTablet && isLandscape)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+              ),
             SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? screenWidth * 0.05 : 0,
+                vertical: isTablet ? 8.0 : 0,
+              ),
+              sliver: CategoryList(
+                categories: _filteredCategories,
+                onCategoryTap: (category) {
+                  Provider.of<BookController>(context, listen: false)
+                      .filterBooksByCategory(category['title']);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CategoryBooksPage(category: category['title']),
+                    ),
+                  );
+                },
+                isTablet: isTablet,
+              ),
             ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isTablet ? screenWidth * 0.05 : 0,
-              vertical: isTablet ? 8.0 : 0,
-            ),
-            sliver: CategoryList(
-              categories: _filteredCategories,
-              onCategoryTap: (category) {
-                Provider.of<BookController>(context, listen: false)
-                    .filterBooksByCategory(category['title']);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CategoryBooksPage(category: category['title']),
-                  ),
-                );
-              },
-              isTablet: isTablet,
-            ),
-          ),
+          ],
         ],
       ),
     );

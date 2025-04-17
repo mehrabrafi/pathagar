@@ -148,7 +148,7 @@ class _ActionButtonsState extends State<ActionButtons> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PDFViewerPage(
+                    builder: (context) => PDFViewerScreen(
                       pdfUrl: widget.book.pdfUrl,
                       title: widget.book.title,
                     ),
@@ -177,7 +177,7 @@ class _ActionButtonsState extends State<ActionButtons> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => PDFViewerPage(
+          builder: (context) => PDFViewerScreen(
             pdfUrl: widget.book.pdfUrl,
             title: widget.book.title,
           ),
@@ -293,7 +293,7 @@ class _ActionButtonsState extends State<ActionButtons> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PDFViewerPage(
+                  builder: (context) => PDFViewerScreen(
                     pdfUrl: widget.book.pdfUrl,
                     title: widget.book.title,
                   ),

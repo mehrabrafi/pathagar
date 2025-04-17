@@ -162,14 +162,12 @@ class _AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CircleAvatar(
+    return CircleAvatar(
       radius: 30,
       backgroundColor: Colors.white,
       child: ClipOval(
-        child: Image(
-          image: NetworkImage(
-            'https://i.postimg.cc/pd1NwvKQ/Chat-GPT-Image-Apr-15-2025-01-23-52-PM.png',
-          ),
+        child: Image.asset(
+          'assets/logo.png', // Replace with your actual asset path
           width: 45,
           height: 45,
           fit: BoxFit.cover,

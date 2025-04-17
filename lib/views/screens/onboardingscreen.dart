@@ -18,24 +18,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, dynamic>> onboardingData = [
     {
-      "image": "https://i.postimg.cc/wTQJxgSQ/u1.png",
+      "image": "assets/u1.png",
       "text": "হাজারো শিক্ষামূলক বই এখন এক অ্যাপে",
       "bgColor": Color(0xFFE3F2FD),
       "textColor": Color(0xFF0D47A1),
     },
     {
-      "image": "https://i.postimg.cc/5NVLM6kt/o3.png",
+      "image": "assets/o3.png",
       "text": "অফলাইনে পড়ুন বিনামূল্যে!",
       "bgColor": Color(0xFFE8F5E9),
       "textColor": Color(0xFF2E7D32),
     },
     {
-      "image": "https://i.postimg.cc/K8cTRCbS/u2.png",
+      "image": "assets/u2.png",
       "text": "নতুন বই নিয়মিত আপডেট – শেখার যাত্রায় থাকুন সবসময় এগিয়ে!",
       "bgColor": Color(0xFFFFF8E1),
       "textColor": Color(0xFFF57F17),
     },
   ];
+
 
   @override
   void initState() {

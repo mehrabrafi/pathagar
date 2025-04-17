@@ -19,7 +19,6 @@ class BookInfoHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = this.isTablet ?? screenWidth >= 600;
-
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: isTablet ? screenWidth * 0.08 : screenWidth * 0.05,
@@ -43,7 +42,6 @@ class BookInfoHeader extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // Author
           Text(
             'By $author',
             style: theme.textTheme.bodyMedium?.copyWith(

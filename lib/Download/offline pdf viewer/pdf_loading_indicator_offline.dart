@@ -39,7 +39,7 @@ class PdfLoadingIndicator extends StatelessWidget {
                 ),
               ),
               child: Icon(
-                Icons.picture_as_pdf,
+                Icons.library_books,
                 size: 48,
                 color: Colors.blueAccent,
               ),
@@ -50,7 +50,7 @@ class PdfLoadingIndicator extends StatelessWidget {
             baseColor: colorScheme.primary.withOpacity(0.3),
             highlightColor: colorScheme.primary.withOpacity(0.1),
             child: Text(
-              'Preparing Document',
+              'Loading Book',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

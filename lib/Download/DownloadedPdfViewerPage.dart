@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:confetti/confetti.dart';
+
 import 'offline pdf viewer/offline_pdf_appbar.dart';
 import 'offline pdf viewer/pdf_loading_indicator_offline.dart';
-import 'offline pdf viewer/pdf_confetti_offline.dart';
 import 'offline pdf viewer/pdf_controls_offline.dart';
 import 'offline pdf viewer/pdf_error_view_offline.dart';
 import 'offline pdf viewer/pdf_page_indicator_offline.dart';
@@ -36,7 +35,6 @@ class _DownloadedPdfViewerScreenState extends State<DownloadedPdfViewerScreen>
   bool _isFullScreen = false;
   bool _isExiting = false;
   double _zoomLevel = 1.0;
-  late ConfettiController _confettiController;
   late AnimationController _loadingAnimationController;
   late Animation<double> _loadingAnimation;
   bool _isPageLocked = false;
@@ -45,7 +43,6 @@ class _DownloadedPdfViewerScreenState extends State<DownloadedPdfViewerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _confettiController = ConfettiController(duration: const Duration(seconds: 1));
     _loadingAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -63,7 +60,6 @@ class _DownloadedPdfViewerScreenState extends State<DownloadedPdfViewerScreen>
     _pageController.dispose();
     _pageFocusNode.dispose();
     _setNormalOrientation();
-    _confettiController.dispose();
     _loadingAnimationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -222,7 +218,7 @@ class _DownloadedPdfViewerScreenState extends State<DownloadedPdfViewerScreen>
                               this.pages = pages;
                               isReady = true;
                             });
-                            _confettiController.play();
+
                           },
                           onError: (error) {
                             setState(() {
@@ -320,9 +316,6 @@ class _DownloadedPdfViewerScreenState extends State<DownloadedPdfViewerScreen>
               isFullScreen: _isFullScreen,
               pages: pages,
               currentPage: currentPage,
-            ),
-            PdfConfetti(
-              confettiController: _confettiController,
             ),
           ],
         ),

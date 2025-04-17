@@ -199,7 +199,7 @@ class _AppSubtitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text(
-      'Explore Knowledge',
+      'জ্ঞান এখন সবার হাতের মুঠোয়',
       style: TextStyle(fontSize: 14, color: Colors.white70),
     );
   }

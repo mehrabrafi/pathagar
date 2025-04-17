@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lottie/lottie.dart';
 import 'TermsOfServiceScreen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -36,7 +34,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       "textColor": Color(0xFFF57F17),
     },
   ];
-
 
   @override
   void initState() {
@@ -87,7 +84,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-
             Positioned(
               bottom: -100,
               left: -50,
@@ -100,11 +96,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-
             SafeArea(
               child: Column(
                 children: [
-                  // Skip button
                   Align(
                     alignment: Alignment.topRight,
                     child: Padding(
@@ -122,7 +116,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
@@ -134,43 +127,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         final data = onboardingData[index];
 
                         return Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isTablet ? 40 : 20,
-                          ),
+                          padding: EdgeInsets.symmetric(horizontal: isTablet ? 40 : 20),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Image with floating effect
-                              Hero(
-                                tag: 'onboarding-image-$index',
-                                child: Container(
-                                  height: isTablet ? 350 : 250,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: CachedNetworkImage(
-                                      imageUrl: data["image"],
-                                      fit: BoxFit.contain,
-                                      placeholder: (context, url) => Center(
-                                        child: CircularProgressIndicator(
-                                          color: data["textColor"],
-                                        ),
-                                      ),
-                                      errorWidget: (context, url, error) => Container(
-                                        color: Colors.grey[200],
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 60,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                              // Local Image
+                              Container(
+                                height: isTablet ? 350 : 250,
+                                child: Image.asset(
+                                  data["image"],
+                                  fit: BoxFit.contain,
                                 ),
                               ),
 
                               SizedBox(height: 40),
 
-                              // Text with typewriter effect
+                              // Animated Text
                               AnimatedSwitcher(
                                 duration: Duration(milliseconds: 500),
                                 transitionBuilder: (child, animation) {
@@ -203,8 +175,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                     ),
                   ),
-
-                  // Bottom controls
                   Padding(
                     padding: EdgeInsets.only(
                       bottom: isTablet ? 40 : 20,
@@ -213,7 +183,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Custom dot indicators
+                        // Dot Indicators
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(
@@ -232,10 +202,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ),
                         ),
-
                         SizedBox(height: 30),
-
-                        // Animated button
+                        // Animated Button
                         AnimatedContainer(
                           duration: Duration(milliseconds: 500),
                           width: _isLastPage ? size.width * 0.8 : 60,

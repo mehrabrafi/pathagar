@@ -268,12 +268,6 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
               });
             }
           },
-          onResetZoom: () {
-            setState(() {
-              _currentZoomLevel = 1.0;
-              _pdfController.zoomLevel = _currentZoomLevel;
-            });
-          },
           onToggleFullScreen: _toggleFullScreen,
           onBack: () async {
             if (_isFullScreen) {

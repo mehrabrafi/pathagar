@@ -10,7 +10,6 @@ class PdfAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double currentZoomLevel;
   final VoidCallback onZoomIn;
   final VoidCallback onZoomOut;
-  final VoidCallback onResetZoom;
   final VoidCallback onToggleFullScreen;
   final VoidCallback onBack;
 
@@ -24,7 +23,6 @@ class PdfAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.currentZoomLevel,
     required this.onZoomIn,
     required this.onZoomOut,
-    required this.onResetZoom,
     required this.onToggleFullScreen,
     required this.onBack,
   });
@@ -53,11 +51,6 @@ class PdfAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             icon: const Icon(Icons.zoom_out),
             onPressed: onZoomOut,
-          ),
-        if (isRendered && !renderError && !isFullScreen)
-          IconButton(
-            icon: const Icon(Icons.zoom_out_map),
-            onPressed: onResetZoom,
           ),
         if (isRendered && !renderError)
           IconButton(

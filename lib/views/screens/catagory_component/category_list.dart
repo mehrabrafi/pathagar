@@ -1,43 +1,13 @@
 import 'package:flutter/material.dart';
 
-class CategoryList extends StatelessWidget {
-  final List<Map<String, dynamic>> categories;
-  final Function(Map<String, dynamic>) onCategoryTap;
-  final bool isTablet;
-
-  const CategoryList({
-    super.key,
-    required this.categories,
-    required this.onCategoryTap,
-    required this.isTablet,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-            (context, index) {
-          final category = categories[index];
-          return CategoryListItem(
-            title: category['title'],
-            icon: category['icon'],
-            color: category['color'],
-            onTap: () => onCategoryTap(category),
-            isTablet: isTablet,
-          );
-        },
-        childCount: categories.length,
-      ),
-    );
-  }
-}
-
 class CategoryListItem extends StatelessWidget {
   final String title;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   final bool isTablet;
+  final bool hasSubcategories;
+  final bool isExpanded;
 
   const CategoryListItem({
     super.key,
@@ -46,6 +16,8 @@ class CategoryListItem extends StatelessWidget {
     required this.color,
     required this.onTap,
     required this.isTablet,
+    this.hasSubcategories = false,
+    this.isExpanded = false,
   });
 
   @override
@@ -95,11 +67,18 @@ class CategoryListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                size: isTablet ? 28 : 24,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
-              ),
+              if (hasSubcategories)
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: isTablet ? 28 : 24,
+                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+                )
+              else
+                Icon(
+                  Icons.chevron_right,
+                  size: isTablet ? 28 : 24,
+                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+                ),
             ],
           ),
         ),

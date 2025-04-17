@@ -41,7 +41,7 @@ class PdfLoadingIndicator extends StatelessWidget {
               child: Icon(
                 Icons.picture_as_pdf,
                 size: 48,
-                color: colorScheme.primary,
+                color: Colors.blueAccent,
               ),
             ),
           ),

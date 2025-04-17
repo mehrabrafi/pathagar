@@ -37,14 +37,14 @@ class PdfLoadingIndicator extends StatelessWidget {
                 color: colorScheme.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.3),
+                  color: Colors.blueAccent,
                   width: 2,
                 ),
               ),
               child: Icon(
                 Icons.picture_as_pdf,
                 size: 48,
-                color: colorScheme.primary,
+                color:Colors.blueAccent,
               ),
             ),
           ),
@@ -64,8 +64,8 @@ class PdfLoadingIndicator extends StatelessWidget {
             child: Column(
               children: [
                 Shimmer.fromColors(
-                  baseColor: colorScheme.primary.withOpacity(0.3),
-                  highlightColor: colorScheme.primary.withOpacity(0.1),
+                  baseColor: Colors.blueAccent,
+                  highlightColor: Colors.blueAccent,
                   child: Text(
                     'Loading Document',
                     style: theme.textTheme.titleLarge?.copyWith(
@@ -84,7 +84,7 @@ class PdfLoadingIndicator extends StatelessWidget {
                         '${(value * 100).toStringAsFixed(1)}%',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
+                          color:Colors.blueAccent,
                         ),
                       );
                     },
@@ -102,8 +102,8 @@ class PdfLoadingIndicator extends StatelessWidget {
                   height: 12,
                   child: LinearProgressIndicator(
                     value: downloadProgress,
-                    backgroundColor: colorScheme.surfaceVariant,
-                    valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                    backgroundColor:Colors.white,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
                     minHeight: 12,
                   ),
                 ),
@@ -130,7 +130,7 @@ class PdfLoadingIndicator extends StatelessWidget {
                     color: colorScheme.secondary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: colorScheme.secondary,
+                      color:Colors.blueAccent,
                       width: 1,
                     ),
                   ),
@@ -139,7 +139,7 @@ class PdfLoadingIndicator extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.download_done,
-                        color: colorScheme.secondary,
+                        color: Colors.red,
                         size: 16,
                       ),
                       const SizedBox(width: 8),

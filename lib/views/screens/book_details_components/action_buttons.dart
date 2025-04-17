@@ -332,7 +332,7 @@ class _ActionButtonsState extends State<ActionButtons> {
                     strokeWidth: 3,
                     backgroundColor: colorScheme.surfaceVariant,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      colorScheme.primary,
+                      Colors.blueAccent,
                     ),
                   ),
                 ),
@@ -346,9 +346,9 @@ class _ActionButtonsState extends State<ActionButtons> {
                   size: 28, // Match other icon sizes
                 ),
                 color: _isDownloaded
-                    ? colorScheme.primary
+                    ? Colors.red
                     : isDownloading
-                    ? colorScheme.primary
+                    ? Colors.blueAccent
                     : theme.textTheme.bodyLarge?.color,
                 onPressed: isDownloading || !_isOnline ? null : _handleDownloadAction,
               ),

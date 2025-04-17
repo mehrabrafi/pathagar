@@ -1,26 +1,29 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:confetti/confetti.dart';
-
-class DownloadedPdfViewerPage extends StatefulWidget {
+import 'offline pdf viewer/offline_pdf_appbar.dart';
+import 'offline pdf viewer/pdf_loading_indicator_offline.dart';
+import 'offline pdf viewer/pdf_confetti_offline.dart';
+import 'offline pdf viewer/pdf_controls_offline.dart';
+import 'offline pdf viewer/pdf_error_view_offline.dart';
+import 'offline pdf viewer/pdf_page_indicator_offline.dart';
+class DownloadedPdfViewerScreen extends StatefulWidget {
   final String filePath;
   final String? title;
 
-  const DownloadedPdfViewerPage({
+  const DownloadedPdfViewerScreen({
     super.key,
     required this.filePath,
     this.title = 'PDF Viewer',
   });
 
   @override
-  State<DownloadedPdfViewerPage> createState() => _DownloadedPdfViewerPageState();
+  State<DownloadedPdfViewerScreen> createState() => _DownloadedPdfViewerScreenState();
 }
 
-class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
+class _DownloadedPdfViewerScreenState extends State<DownloadedPdfViewerScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   final Completer<PDFViewController> _pdfController = Completer<PDFViewController>();
   int? pages = 0;
@@ -64,13 +67,6 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
     _loadingAnimationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  @override
-  void didChangeMetrics() {
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   Future<void> _setNormalOrientation() async {
@@ -129,7 +125,6 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
     });
   }
 
-
   void _toggleLock() {
     setState(() {
       _isPageLocked = !_isPageLocked;
@@ -158,184 +153,6 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
     });
   }
 
-  Widget _buildLoadingIndicator(ThemeData theme, ColorScheme colorScheme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedBuilder(
-            animation: _loadingAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _loadingAnimation.value,
-                child: child,
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.3),
-                  width: 2,
-                ),
-              ),
-              child: Icon(
-                Icons.picture_as_pdf,
-                size: 48,
-                color: colorScheme.primary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Shimmer.fromColors(
-            baseColor: colorScheme.primary.withOpacity(0.3),
-            highlightColor: colorScheme.primary.withOpacity(0.1),
-            child: Text(
-              'Preparing Document',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorView(ThemeData theme, ColorScheme colorScheme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load PDF',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              onPressed: () {
-                setState(() {
-                  errorMessage = '';
-                });
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFullScreenControls() {
-    if (!_isFullScreen) return const SizedBox();
-
-    return Positioned(
-      bottom: 20,
-      right: 20,
-      child: FloatingActionButton(
-        heroTag: 'unrotate',
-        onPressed: _toggleFullScreen,
-        backgroundColor: Colors.white.withOpacity(0.9),
-        child: Icon(
-          Icons.screen_rotation,
-          color: Colors.blueAccent,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLockButton() {
-    if (!_isFullScreen) return const SizedBox();
-
-    return Positioned(
-      top: 20,
-      right: 20,
-      child: FloatingActionButton(
-        heroTag: 'lock',
-        onPressed: _toggleLock,
-        backgroundColor: Colors.white.withOpacity(0.9),
-        child: Icon(
-          _isPageLocked ? Icons.lock : Icons.lock_open,
-          color: Colors.blueAccent,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageIndicator() {
-    if (pages == null || _isFullScreen) return const SizedBox();
-
-    return Positioned(
-      bottom: 16,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            '${currentPage! + 1}/$pages',
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Path drawStar(Size size) {
-    double degToRad(double deg) => deg * (pi / 180.0);
-    const numberOfPoints = 5;
-    final halfWidth = size.width / 2;
-    final externalRadius = halfWidth;
-    final internalRadius = halfWidth / 2.5;
-    final degreesPerStep = degToRad(360 / numberOfPoints);
-    final halfDegreesPerStep = degreesPerStep / 2;
-    final path = Path();
-    final fullAngle = degToRad(360);
-    path.moveTo(size.width, halfWidth);
-    for (double step = 0; step < fullAngle; step += degreesPerStep) {
-      path.lineTo(
-        halfWidth + externalRadius * cos(step),
-        halfWidth + externalRadius * sin(step),
-      );
-      path.lineTo(
-        halfWidth + internalRadius * cos(step + halfDegreesPerStep),
-        halfWidth + internalRadius * sin(step + halfDegreesPerStep),
-      );
-    }
-    path.close();
-    return path;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -346,62 +163,39 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
       child: Scaffold(
         appBar: _isFullScreen
             ? null
-            : AppBar(
-          title: Text(
-            widget.title!,
-            style: const TextStyle(color: Colors.white),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.blueAccent,
-          iconTheme: const IconThemeData(color: Colors.white),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              if (_isFullScreen) {
-                setState(() => _isExiting = true);
-                await _setNormalOrientation();
-                await Future.delayed(const Duration(milliseconds: 300));
-                if (mounted) Navigator.of(context).pop();
-              } else {
-                Navigator.of(context).pop();
+            : PdfAppBar(
+          title: widget.title!,
+          pages: pages,
+          isReady: isReady,
+          errorMessage: errorMessage,
+          isFullScreen: _isFullScreen,
+          showPageInput: _showPageInput,
+          currentPage: currentPage,
+          zoomLevel: _zoomLevel,
+          onZoomIn: _zoomIn,
+          onZoomOut: _zoomOut,
+          onToggleFullScreen: _toggleFullScreen,
+          onTogglePageInput: () {
+            setState(() {
+              _showPageInput = !_showPageInput;
+              if (_showPageInput) {
+                _pageController.text = (currentPage! + 1).toString();
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  FocusScope.of(context).requestFocus(_pageFocusNode);
+                });
               }
-            },
-          ),
-          actions: [
-            if (pages != null && isReady && errorMessage.isEmpty)
-              IconButton(
-                icon: const Icon(Icons.zoom_in, color: Colors.white),
-                onPressed: _zoomIn,
-              ),
-            if (pages != null && isReady && errorMessage.isEmpty)
-              IconButton(
-                icon: const Icon(Icons.zoom_out, color: Colors.white),
-                onPressed: _zoomOut,
-              ),
-            if (pages != null && isReady && errorMessage.isEmpty)
-              IconButton(
-                icon: Icon(
-                  _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
-                  color: Colors.white,
-                ),
-                onPressed: _toggleFullScreen,
-              ),
-            if (pages != null && !_showPageInput)
-              IconButton(
-                icon: const Icon(Icons.pageview, color: Colors.white),
-                onPressed: () {
-                  setState(() {
-                    _showPageInput = !_showPageInput;
-                    if (_showPageInput) {
-                      _pageController.text = (currentPage! + 1).toString();
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        FocusScope.of(context).requestFocus(_pageFocusNode);
-                      });
-                    }
-                  });
-                },
-              ),
-          ],
+            });
+          },
+          onBack: () async {
+            if (_isFullScreen) {
+              setState(() => _isExiting = true);
+              await _setNormalOrientation();
+              await Future.delayed(const Duration(milliseconds: 300));
+              if (mounted) Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
         ),
         body: Stack(
           children: [
@@ -455,9 +249,22 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
                     ),
                   )
                 else
-                  _buildErrorView(theme, colorScheme),
+                  PdfErrorView(
+                    theme: theme,
+                    colorScheme: colorScheme,
+                    errorMessage: errorMessage,
+                    onRetry: () {
+                      setState(() {
+                        errorMessage = '';
+                      });
+                    },
+                  ),
                 if (!isReady && errorMessage.isEmpty)
-                  _buildLoadingIndicator(theme, colorScheme),
+                  PdfLoadingIndicator(
+                    theme: theme,
+                    colorScheme: colorScheme,
+                    loadingAnimation: _loadingAnimation,
+                  ),
               ],
             ),
             if (_showPageInput && pages != null && !_isFullScreen)
@@ -503,24 +310,19 @@ class _DownloadedPdfViewerPageState extends State<DownloadedPdfViewerPage>
                   ),
                 ),
               ),
-            _buildFullScreenControls(),
-            _buildLockButton(),
-            _buildPageIndicator(),
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: const [
-                  Colors.green,
-                  Colors.blue,
-                  Colors.pink,
-                  Colors.orange,
-                  Colors.purple,
-                ],
-                createParticlePath: drawStar,
-              ),
+            PdfControls(
+              isFullScreen: _isFullScreen,
+              isPageLocked: _isPageLocked,
+              onToggleFullScreen: _toggleFullScreen,
+              onToggleLock: _toggleLock,
+            ),
+            PdfPageIndicator(
+              isFullScreen: _isFullScreen,
+              pages: pages,
+              currentPage: currentPage,
+            ),
+            PdfConfetti(
+              confettiController: _confettiController,
             ),
           ],
         ),

@@ -241,7 +241,7 @@ class _DownloadedBooksScreenState extends State<DownloadedBooksScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DownloadedPdfViewerPage(filePath: filePath),
+        builder: (context) => DownloadedPdfViewerScreen(filePath: filePath),
       ),
     );
   }

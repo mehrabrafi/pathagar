@@ -7,12 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-
-import '../../ pdf_viewer/pdf_app_bar.dart';
-import '../../ pdf_viewer/pdf_controls.dart';
-import '../../ pdf_viewer/pdf_error_view.dart';
-import '../../ pdf_viewer/pdf_loading_indicator.dart';
-
+import '../../online_pdf_viewer/pdf_app_bar.dart';
+import '../../online_pdf_viewer/pdf_controls.dart';
+import '../../online_pdf_viewer/pdf_error_view.dart';
+import '../../online_pdf_viewer/pdf_loading_indicator.dart';
 class PDFViewerScreen extends StatefulWidget {
   final String pdfUrl;
   final String title;

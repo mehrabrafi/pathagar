@@ -16,24 +16,21 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return AppBar(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
-      iconTheme: IconThemeData(
-        color: isDarkMode ? Colors.white : Colors.black,
-      ),
+      backgroundColor: Colors.blueAccent,
+      iconTheme: const IconThemeData(color: Colors.white), // Back arrow icon color
       title: TextField(
         controller: controller,
         autofocus: true,
+        cursorColor: Colors.white, // Cursor color
         style: TextStyle(
-          color: isDarkMode ? Colors.white : Colors.black,
+          color: Colors.white,
           fontSize: isTablet ? 18 : 16,
         ),
         decoration: InputDecoration(
           hintText: 'Search downloaded books...',
           hintStyle: TextStyle(
-            color: isDarkMode ? Colors.white54 : Colors.black54,
+            color: Colors.white70,
             fontSize: isTablet ? 18 : 16,
           ),
           border: InputBorder.none,
@@ -42,7 +39,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.close, size: isTablet ? 32 : 24),
+          icon: Icon(Icons.close, size: isTablet ? 32 : 24, color: Colors.white),
           onPressed: () {
             if (controller.text.isEmpty) {
               onClose();

@@ -8,6 +8,7 @@ class SettingsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -15,7 +16,7 @@ class SettingsHeader extends StatelessWidget {
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
+          color: isDarkMode ? Colors.white : Colors.black, // 👈 dynamic color
           fontSize: isTablet ? 22 : 18,
         ),
       ),

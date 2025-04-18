@@ -27,45 +27,120 @@ class HomeDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerItems(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(top: 16, bottom: 32),
       children: [
+
+        // Drawer items with animations
         _buildDrawerItem(
           context,
-          icon: Icons.info,
+          icon: Icons.info_outline_rounded,
           title: 'About',
+          iconColor: Colors.blueAccent,
           onTap: () => _navigateAfterPop(context, () => HomePageUtils.showAboutDialog(context)),
         ),
         _buildDrawerItem(
           context,
-          icon: Icons.share,
+          icon: Icons.share_rounded,
           title: 'Share App',
+          iconColor: Colors.green,
           onTap: () => _navigateAfterPop(context, () => HomePageUtils.shareApp(context)),
         ),
         _buildDrawerItem(
           context,
-          icon: Icons.star_rate,
+          icon: Icons.star_rate_rounded,
           title: 'Rate Us',
+          iconColor: Colors.amber,
           onTap: () => _navigateAfterPop(context, () => HomePageUtils.rateApp(context)),
         ),
-        // Add this new item for Active Downloads
         _buildDrawerItem(
           context,
-          icon: Icons.download,
+          icon: Icons.download_rounded,
           title: 'Downloaded Books',
+          iconColor: Colors.purpleAccent,
           onTap: () => _pushRouteAfterPop(context, const DownloadedBooksScreen()),
         ),
         _buildDrawerItem(
           context,
-          icon: Icons.settings,
+          icon: Icons.settings_rounded,
           title: 'Settings',
+          iconColor: colorScheme.primary,
           onTap: () => _pushRouteAfterPop(context, const SettingsPage()),
         ),
+
       ],
     );
   }
-  }
+
+  Widget _buildDrawerItem(
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required VoidCallback onTap,
+        Color? iconColor,
+      }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          splashColor: colorScheme.primary.withOpacity(0.2),
+          highlightColor: colorScheme.primary.withOpacity(0.1),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (iconColor ?? colorScheme.primary).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor ?? colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.5),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }  }
 
   void _navigateAfterPop(BuildContext context, VoidCallback action) {
     Navigator.pop(context);

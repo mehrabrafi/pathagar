@@ -21,6 +21,14 @@ class ThemeOption extends StatelessWidget {
     final theme = Theme.of(context);
     final themeController = Provider.of<ThemeController>(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Set icon color based on theme mode
+    final iconColor = mode == AppThemeMode.light
+        ? Colors.amber // Amber for light mode
+        : isDarkMode
+        ? Colors.white // White for dark theme
+        : Colors.white; // Black for light theme
 
     return ListTile(
       contentPadding: EdgeInsets.symmetric(
@@ -30,12 +38,12 @@ class ThemeOption extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color:Colors.blueAccent,
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-          color: theme.colorScheme.primary,
+          color: iconColor, // Use the determined icon color
           size: isTablet ? 28 : 24,
         ),
       ),
@@ -59,7 +67,7 @@ class ThemeOption extends StatelessWidget {
         onChanged: (value) {
           if (value != null) themeController.updateThemeMode(value);
         },
-        activeColor: theme.colorScheme.primary,
+        activeColor:Colors.blueAccent,
       ),
       onTap: () => themeController.updateThemeMode(mode),
     );

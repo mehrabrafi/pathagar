@@ -13,17 +13,20 @@ class SettingsPage extends StatelessWidget {
     final isTablet = screenWidth >= 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Settings',
-          style: TextStyle(
-            fontSize: isTablet ? 24 : 20,
-            fontWeight: FontWeight.bold,
-          ),
+      appBar:AppBar(
+      backgroundColor: Colors.blueAccent,
+      iconTheme: const IconThemeData(color: Colors.white), // 👈 back arrow color
+      title: Text(
+        'Settings',
+        style: TextStyle(
+          fontSize: isTablet ? 24 : 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
-        centerTitle: true,
-        elevation: 0,
       ),
+      centerTitle: true,
+      elevation: 0,
+    ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? screenWidth * 0.1 : 16,

@@ -33,10 +33,12 @@ class BookStorageService {
     final books = await getDownloadedBooks();
     final existingIndex = books.indexWhere((b) => b.id == book.id);
 
+    final bookToSave = book.copyWith(isDownloaded: true);
+
     if (existingIndex >= 0) {
-      books[existingIndex] = book;
+      books[existingIndex] = bookToSave;
     } else {
-      books.add(book);
+      books.add(bookToSave);
     }
 
     await _saveBooks(books);
@@ -54,8 +56,14 @@ class BookStorageService {
   }
 
   Future<bool> isBookDownloaded(Book book) async {
-    final books = await getDownloadedBooks();
-    return books.any((b) => b.id == book.id);
+    final downloadedBook = await getDownloadedBook(book.id);
+    if (downloadedBook == null) return false;
+
+    if (downloadedBook.localPath != null) {
+      final file = File(downloadedBook.localPath!);
+      return await file.exists();
+    }
+    return false;
   }
 
   Future<void> clearAllDownloads() async {
@@ -91,6 +99,6 @@ class BookStorageService {
         }
       }
     }
-    return totalSize / (1024 * 1024); // Return in MB
+    return totalSize / (1024 * 1024);
   }
 }

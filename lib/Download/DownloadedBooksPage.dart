@@ -5,7 +5,6 @@ import '../../models/book.dart';
 import 'DownloadedPdfViewerPage.dart';
 import 'dialog/delete_confirmation_dialog.dart';
 import 'widgets/book_card_mobile.dart';
-import 'widgets/book_card_tablet.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/search_app_bar.dart';
 import 'widgets/selection_app_bar.dart';
@@ -23,12 +22,14 @@ class _DownloadedBooksScreenState extends State<DownloadedBooksScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   List<Book> _searchResults = [];
+  late BookController _bookController;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BookController>(context, listen: false).loadDownloadedBooks();
+      _bookController = Provider.of<BookController>(context, listen: false);
+      _bookController.loadDownloadedBooks();
     });
   }
 
@@ -68,9 +69,7 @@ class _DownloadedBooksScreenState extends State<DownloadedBooksScreen> {
   }
 
   void _startSearch() {
-    setState(() {
-      _isSearching = true;
-    });
+    setState(() => _isSearching = true);
   }
 
   void _stopSearch() {
@@ -82,21 +81,21 @@ class _DownloadedBooksScreenState extends State<DownloadedBooksScreen> {
   }
 
   void _performSearch(String query, List<Book> allBooks) {
-    setState(() {
-      if (query.isEmpty) {
-        _searchResults.clear();
-      } else {
+    if (query.isEmpty) {
+      setState(() => _searchResults.clear());
+    } else {
+      final queryLower = query.toLowerCase();
+      setState(() {
         _searchResults = allBooks.where((book) {
-          return book.title.toLowerCase().contains(query.toLowerCase()) ||
-              book.author.toLowerCase().contains(query.toLowerCase()) ||
-              book.category.toLowerCase().contains(query.toLowerCase());
+          return book.title.toLowerCase().contains(queryLower) ||
+              book.author.toLowerCase().contains(queryLower) ||
+              book.category.toLowerCase().contains(queryLower);
         }).toList();
-      }
-    });
+      });
+    }
   }
 
-  Future<void> _deleteSelectedBooks(BuildContext context) async {
-    final bookController = Provider.of<BookController>(context, listen: false);
+  Future<void> _deleteSelectedBooks() async {
     final shouldDelete = await showDeleteConfirmationDialog(
       context,
       _selectedBooks.length,
@@ -104,144 +103,88 @@ class _DownloadedBooksScreenState extends State<DownloadedBooksScreen> {
 
     if (shouldDelete == true) {
       for (final bookId in _selectedBooks) {
-        await bookController.removeDownloadedBook(bookId);
+        await _bookController.removeDownloadedBook(bookId);
       }
       _clearSelection();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Deleted ${_selectedBooks.length} book(s)'),
-        ),
+        SnackBar(content: Text('Deleted ${_selectedBooks.length} book(s)')),
       );
     }
   }
 
+  void _openPdfViewer(String filePath) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DownloadedPdfViewerScreen(filePath: filePath),
+      ),
+    );
+  }
+
+  Future<void> _handleBookDelete(Book book) async {
+    await _bookController.removeDownloadedBook(book.id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${book.title}" removed'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => _bookController.downloadBook(book),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600;
-
     return Scaffold(
       appBar: _isSearching
           ? SearchAppBar(
         controller: _searchController,
-        onChanged: (query) {
-          final bookController = Provider.of<BookController>(context, listen: false);
-          _performSearch(query, bookController.downloadedBooks);
-        },
+        onChanged: (query) => _performSearch(query, _bookController.downloadedBooks),
         onClose: _stopSearch,
-        isTablet: isTablet,
       )
           : SelectionAppBar(
         isSelectionMode: _isSelectionMode,
         selectedCount: _selectedBooks.length,
-        onSelectAll: () {
-          final bookController = Provider.of<BookController>(context, listen: false);
-          _selectAllBooks(bookController.downloadedBooks);
-        },
-        onDelete: () => _deleteSelectedBooks(context),
+        onSelectAll: () => _selectAllBooks(_bookController.downloadedBooks),
+        onDelete: _deleteSelectedBooks,
         onClear: _clearSelection,
         onSearch: _startSearch,
-        isTablet: isTablet,
       ),
       body: Consumer<BookController>(
         builder: (context, bookController, child) {
           final booksToDisplay = _isSearching ? _searchResults : bookController.downloadedBooks;
 
           if (booksToDisplay.isEmpty) {
-            return EmptyState(
-              isSearching: _isSearching,
-              isTablet: isTablet,
-            );
+            return EmptyState(isSearching: _isSearching);
           }
 
           return RefreshIndicator(
             onRefresh: () => bookController.loadDownloadedBooks(),
-            child: isTablet
-                ? _buildTabletGrid(booksToDisplay, context)
-                : _buildMobileList(booksToDisplay, context),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: booksToDisplay.length,
+              itemBuilder: (context, index) {
+                final book = booksToDisplay[index];
+                return BookCardMobile(
+                  key: ValueKey(book.id),
+                  book: book,
+                  isSelected: _selectedBooks.contains(book.id),
+                  isSelectionMode: _isSelectionMode,
+                  onTap: () {
+                    if (_isSelectionMode) {
+                      _toggleSelection(book.id);
+                    } else if (book.localPath != null) {
+                      _openPdfViewer(book.localPath!);
+                    }
+                  },
+                  onLongPress: () => _toggleSelection(book.id),
+                  onDelete: () => _handleBookDelete(book),
+                );
+              },
+            ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildMobileList(List<Book> books, BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: books.length,
-      itemBuilder: (context, index) {
-        final book = books[index];
-        return BookCardMobile(
-          book: book,
-          isSelected: _selectedBooks.contains(book.id),
-          isSelectionMode: _isSelectionMode,
-          onTap: () {
-            if (_isSelectionMode) {
-              _toggleSelection(book.id);
-            } else if (book.localPath != null) {
-              _openPdfViewer(context, book.localPath!);
-            }
-          },
-          onLongPress: () => _toggleSelection(book.id),
-          onDelete: () async {
-            await Provider.of<BookController>(context, listen: false)
-                .removeDownloadedBook(book.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('"${book.title}" removed'),
-                action: SnackBarAction(
-                  label: 'Undo',
-                  onPressed: () {
-                    Provider.of<BookController>(context, listen: false)
-                        .downloadBook(book);
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildTabletGrid(List<Book> books, BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = screenWidth >= 900 ? 4 : 3;
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: 0.7,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: books.length,
-      itemBuilder: (context, index) {
-        final book = books[index];
-        return BookCardTablet(
-          book: book,
-          isSelected: _selectedBooks.contains(book.id),
-          isSelectionMode: _isSelectionMode,
-          onTap: () {
-            if (_isSelectionMode) {
-              _toggleSelection(book.id);
-            } else if (book.localPath != null) {
-              _openPdfViewer(context, book.localPath!);
-            }
-          },
-          onLongPress: () => _toggleSelection(book.id),
-        );
-      },
-    );
-  }
-
-  void _openPdfViewer(BuildContext context, String filePath) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DownloadedPdfViewerScreen(filePath: filePath),
       ),
     );
   }

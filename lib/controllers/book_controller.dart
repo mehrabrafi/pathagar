@@ -24,7 +24,6 @@ class BookController extends ChangeNotifier {
     _initialize();
   }
 
-// Add these to your BookController class
   bool _isOneByOneDeletionMode = false;
   bool get isOneByOneDeletionMode => _isOneByOneDeletionMode;
 
@@ -37,6 +36,7 @@ class BookController extends ChangeNotifier {
     _isOneByOneDeletionMode = false;
     notifyListeners();
   }
+
   List<Book> get books => _repository.books;
   List<Book> get filteredBooks => _repository.filteredBooks;
   List<Book> get bookmarkedBooks => _repository.bookmarkedBooks;
@@ -61,25 +61,24 @@ class BookController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<Book?> getDownloadedBook(String id) async {
+    return await _storageService.getDownloadedBook(id);
+  }
+
   Future<void> downloadBook(
       Book book, {
         Function(int received, int total)? onProgress,
-        Function(String)? onComplete,
-        Function(Object)? onError,
       }) async {
-    try {
-      await _downloadService.downloadBook(
-        book,
-        onProgress: onProgress,
-        onComplete: (path) async {
-          await loadDownloadedBooks();
-          if (onComplete != null) onComplete(path);
-        },
-        onError: onError,
-      );
-    } catch (e) {
-      if (onError != null) onError(e);
-    }
+    await _downloadService.downloadBook(
+      book,
+      onProgress: onProgress,
+      onComplete: (_) async {
+        await loadDownloadedBooks();
+      },
+      onError: (e) {
+        throw e;
+      },
+    );
   }
 
   Future<void> removeDownloadedBook(String id) async {

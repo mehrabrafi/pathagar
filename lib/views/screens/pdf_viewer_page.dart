@@ -10,6 +10,7 @@ import '../../online_pdf_viewer/pdf_app_bar.dart';
 import '../../online_pdf_viewer/pdf_controls.dart';
 import '../../online_pdf_viewer/pdf_error_view.dart';
 import '../../online_pdf_viewer/pdf_loading_indicator.dart';
+
 class PDFViewerScreen extends StatefulWidget {
   final String pdfUrl;
   final String title;
@@ -28,7 +29,8 @@ class PDFViewerScreen extends StatefulWidget {
   State<PDFViewerScreen> createState() => _PDFViewerScreenState();
 }
 
-class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingObserver {
+class _PDFViewerScreenState extends State<PDFViewerScreen>
+    with WidgetsBindingObserver {
   late Future<Uint8List> _pdfFuture;
   double _downloadProgress = 0.0;
   bool _isRendered = false;
@@ -39,44 +41,43 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
   bool _isFullScreen = false;
   bool _isExiting = false;
   double _currentZoomLevel = 1.0;
-  PdfScrollDirection _scrollDirection = PdfScrollDirection.horizontal;
   bool _isLocked = false;
-  bool _isPortrait = true;
+  Orientation? _currentOrientation;
+  DateTime _lastProgressUpdate = DateTime.now();
+  double _lastProgressValue = 0.0;
+  Uint8List? _pdfData;
+  final PdfScrollDirection _scrollDirection = PdfScrollDirection.horizontal;
+  Timer? _zoomDebounceTimer;
+  double _lastScale = 1.0;
+  bool _isPinching = false;
+
+  // Zoom constraints
+  static const double _minZoomLevel = 0.5;
+  static const double _maxZoomLevel = 5.0;
+  static const double _zoomStep = 0.25;
+  static const double _pinchZoomBuffer = 0.2; // 20% buffer beyond min/max
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializePdfLoader();
-    _checkInitialOrientation();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateOrientation());
+    _currentZoomLevel = _currentZoomLevel.clamp(_minZoomLevel, _maxZoomLevel);
   }
 
-  Future<void> _checkInitialOrientation() async {
-    final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final size = view.physicalSize;
-    _isPortrait = size.height > size.width;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _scrollDirection = PdfScrollDirection.horizontal;
+  void _updateOrientation() {
+    if (!mounted) return;
+    final newOrientation = MediaQuery.of(context).orientation;
+    if (newOrientation != _currentOrientation) {
+      setState(() => _currentOrientation = newOrientation);
+    }
   }
 
   @override
   void didChangeMetrics() {
-    final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final size = view.physicalSize;
-    final newIsPortrait = size.height > size.width;
-
-    if (newIsPortrait != _isPortrait) {
-      setState(() {
-        _isPortrait = newIsPortrait;
-      });
-    }
-
+    _updateOrientation();
     if (mounted) {
-      _scrollDirection = PdfScrollDirection.horizontal;
       _pdfController.zoomLevel = _currentZoomLevel;
     }
   }
@@ -87,44 +88,35 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
     _pdfController.dispose();
     _setNormalOrientation();
     WidgetsBinding.instance.removeObserver(this);
+    _zoomDebounceTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _toggleFullScreen() async {
-    try {
-      // Store current zoom level
-      final currentZoom = _pdfController.zoomLevel;
+    final currentZoom = _pdfController.zoomLevel;
 
+    try {
       if (_isFullScreen) {
-        // Exit fullscreen
         await _setNormalOrientation();
-        // Wait for orientation to complete
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (mounted) {
-          setState(() {
-            _isFullScreen = false;
-            _isLocked = false;
-          });
+        if (mounted && _isFullScreen) {
+          setState(() => _isFullScreen = _isLocked = false);
         }
       } else {
-        // Enter fullscreen
         await _setLandscapeOrientation();
-        if (mounted) {
+        if (mounted && !_isFullScreen) {
           setState(() => _isFullScreen = true);
         }
       }
 
-      // Restore zoom level after a small delay
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (mounted) {
-        _pdfController.zoomLevel = currentZoom;
-        _currentZoomLevel = currentZoom;
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _pdfController.zoomLevel = currentZoom;
+          _currentZoomLevel = currentZoom;
+        }
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() => _isFullScreen = false);
-      }
-      debugPrint('Error toggling fullscreen: $e');
+      if (mounted) setState(() => _isFullScreen = false);
+      debugPrint('Fullscreen error: $e');
     }
   }
 
@@ -134,12 +126,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
       ]);
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } catch (e) {
-      debugPrint('Error setting landscape: $e');
+      debugPrint('Landscape error: $e');
     }
   }
 
@@ -149,50 +138,34 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]);
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.edgeToEdge,
-        overlays: SystemUiOverlay.values,
-      );
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     } catch (e) {
-      debugPrint('Error setting normal orientation: $e');
+      debugPrint('Portrait error: $e');
     }
   }
 
   Future<bool> _onWillPop() async {
     if (_isExiting) return true;
+    if (!_isFullScreen) return true;
 
-    if (_isFullScreen) {
-      setState(() => _isExiting = true);
-      try {
-        await _toggleFullScreen();
-        return false; // Don't pop if we just exited fullscreen
-      } finally {
-        if (mounted) {
-          setState(() => _isExiting = false);
-        }
-      }
-    }
-    return true; // Allow pop in normal mode
+    setState(() => _isExiting = true);
+    await _toggleFullScreen();
+    if (mounted) setState(() => _isExiting = false);
+    return false;
   }
 
   void _initializePdfLoader() {
-    if (!widget.isLocal) {
-      if (widget.preCache) {
-        _checkCacheAndLoad();
-      } else {
-        _pdfFuture = _loadPdf();
-      }
-    } else {
+    if (widget.isLocal) {
       _pdfFuture = _loadLocalPdf();
+    } else {
+      widget.preCache ? _checkCacheAndLoad() : _pdfFuture = _loadPdf();
     }
   }
 
   Future<void> _checkCacheAndLoad() async {
     final file = await DefaultCacheManager().getSingleFile(widget.pdfUrl);
     if (await file.exists()) {
-      if (mounted) {
-        setState(() => _isPreCached = true);
-      }
+      if (mounted) setState(() => _isPreCached = true);
       _pdfFuture = file.readAsBytes();
     } else {
       _pdfFuture = _loadPdf();
@@ -200,6 +173,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
   }
 
   Future<Uint8List> _loadPdf() async {
+    if (_pdfData != null) return _pdfData!;
+
     try {
       _downloadCancelToken = CancelToken();
       final dio = Dio();
@@ -207,35 +182,98 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
         widget.pdfUrl,
         options: Options(responseType: ResponseType.bytes),
         cancelToken: _downloadCancelToken,
-        onReceiveProgress: (received, total) {
-          if (total != -1 && mounted) {
-            setState(() {
-              _downloadProgress = received / total;
-            });
-          }
-        },
+        onReceiveProgress: _handleProgressUpdate,
       );
-      return response.data!;
+      return _pdfData = response.data!;
     } catch (e) {
       if (e is DioException && e.type == DioExceptionType.cancel) {
         throw Exception('Download cancelled');
       }
-      throw Exception('Failed to load PDF: ${e.toString()}');
+      throw Exception('PDF load failed: ${e.toString()}');
+    }
+  }
+
+  void _handleProgressUpdate(int received, int total) {
+    if (total == -1 || !mounted) return;
+
+    final now = DateTime.now();
+    final progress = received / total;
+    if (now.difference(_lastProgressUpdate).inMilliseconds > 100 ||
+        (progress - _lastProgressValue).abs() > 0.01) {
+      setState(() => _downloadProgress = progress);
+      _lastProgressUpdate = now;
+      _lastProgressValue = progress;
     }
   }
 
   Future<Uint8List> _loadLocalPdf() async {
+    if (_pdfData != null) return _pdfData!;
+
     try {
       final file = File(widget.pdfUrl);
-      if (await file.exists()) {
-        return await file.readAsBytes();
-      }
+      if (await file.exists()) return _pdfData = await file.readAsBytes();
       throw Exception('File not found');
     } catch (e) {
-      throw Exception('Failed to load local PDF: ${e.toString()}');
+      throw Exception('Local PDF error: ${e.toString()}');
     }
   }
 
+  void _handleZoomIn() {
+    final newZoom = (_currentZoomLevel + _zoomStep).clamp(_minZoomLevel, _maxZoomLevel);
+    _updateZoomLevel(newZoom);
+  }
+
+  void _handleZoomOut() {
+    final newZoom = (_currentZoomLevel - _zoomStep).clamp(_minZoomLevel, _maxZoomLevel);
+    _updateZoomLevel(newZoom);
+  }
+
+  void _updateZoomLevel(double newZoom) {
+    _zoomDebounceTimer?.cancel();
+
+    // Apply buffer during pinch zoom
+    final effectiveMin = _isPinching ? _minZoomLevel * (1 - _pinchZoomBuffer) : _minZoomLevel;
+    final effectiveMax = _isPinching ? _maxZoomLevel * (1 + _pinchZoomBuffer) : _maxZoomLevel;
+
+    newZoom = newZoom.clamp(effectiveMin, effectiveMax);
+
+    _zoomDebounceTimer = Timer(const Duration(milliseconds: 50), () {
+      if (mounted && newZoom != _currentZoomLevel) {
+        try {
+          _pdfController.zoomLevel = newZoom;
+          setState(() => _currentZoomLevel = newZoom);
+        } catch (e) {
+          debugPrint('Zoom error: $e');
+          _pdfController.zoomLevel = _currentZoomLevel;
+        }
+      }
+    });
+  }
+
+  void _handlePinchStart() {
+    _isPinching = true;
+    _lastScale = 1.0;
+  }
+
+  void _handlePinchUpdate(ScaleUpdateDetails details) {
+    if (!_isPinching) return;
+
+    final scale = details.scale;
+    if (scale == 1.0) return;
+
+    final scaleFactor = scale / _lastScale;
+    _lastScale = scale;
+
+    _updateZoomLevel(_currentZoomLevel * scaleFactor);
+  }
+
+  void _handlePinchEnd() {
+    _isPinching = false;
+    // Snap back to constrained zoom level if beyond bounds
+    if (_currentZoomLevel < _minZoomLevel || _currentZoomLevel > _maxZoomLevel) {
+      _updateZoomLevel(_currentZoomLevel.clamp(_minZoomLevel, _maxZoomLevel));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -254,33 +292,10 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
           isFullScreen: _isFullScreen,
           pdfController: _pdfController,
           currentZoomLevel: _currentZoomLevel,
-          onZoomIn: () {
-            setState(() {
-              _currentZoomLevel += 0.5;
-              _pdfController.zoomLevel = _currentZoomLevel;
-            });
-          },
-          onZoomOut: () {
-            if (_currentZoomLevel > 0.5 && mounted) {
-              setState(() {
-                _currentZoomLevel -= 0.5;
-                _pdfController.zoomLevel = _currentZoomLevel;
-              });
-            }
-          },
+          onZoomIn: _handleZoomIn,
+          onZoomOut: _handleZoomOut,
           onToggleFullScreen: _toggleFullScreen,
-          onBack: () async {
-            if (_isFullScreen) {
-              setState(() => _isExiting = true);
-              await _setNormalOrientation();
-              await Future.delayed(const Duration(milliseconds: 300));
-              if (mounted) {
-                Navigator.of(context).pop();
-              }
-            } else {
-              Navigator.of(context).pop();
-            }
-          },
+          onBack: () => Navigator.of(context).pop(),
         ),
         body: Stack(
           children: [
@@ -294,94 +309,78 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
                     downloadProgress: _downloadProgress,
                     isPreCached: _isPreCached,
                   );
-                } else if (snapshot.hasError) {
+                }
+
+                if (snapshot.hasError) {
                   return PdfErrorView(
                     theme: theme,
                     colorScheme: colorScheme,
-                    onRetry: () {
-                      setState(() {
-                        _renderError = false;
-                        _isRendered = false;
-                        _initializePdfLoader();
-                      });
-                    },
+                    onRetry: () => setState(() {
+                      _renderError = false;
+                      _isRendered = false;
+                      _pdfData = null;
+                      _downloadCancelToken?.cancel();
+                      _initializePdfLoader();
+                    }),
                   );
-                } else if (snapshot.hasData) {
+                }
+
+                if (snapshot.hasData) {
                   return Stack(
                     children: [
-                      IgnorePointer(
-                        ignoring: _isLocked,
-                        child: SfPdfViewer.memory(
-                          snapshot.data!,
-                          controller: _pdfController,
-                          canShowScrollHead: true,
-                          canShowScrollStatus: true,
-                          pageLayoutMode: PdfPageLayoutMode.single,
-                          scrollDirection: _scrollDirection,
-                          initialZoomLevel: _currentZoomLevel,
-                          onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-                            if (mounted) {
-                              setState(() {
-                                _isRendered = true;
-                                _pdfController.zoomLevel = _currentZoomLevel;
-                              });
-                            }
-                          },
-                          onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-                            if (mounted) {
-                              setState(() => _renderError = true);
-                            }
-                          },
-                        ),
-                      ),
-                      if (!_isRendered || _renderError)
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (_renderError)
-                                PdfErrorView(
-                                  theme: theme,
-                                  colorScheme: colorScheme,
-                                  onRetry: () {
-                                    setState(() {
-                                      _renderError = false;
-                                      _isRendered = false;
-                                      _initializePdfLoader();
-                                    });
-                                  },
-                                )
-                              else
-                                CircularProgressIndicator(
-                                    color: colorScheme.primary),
-                            ],
+                      GestureDetector(
+                        onScaleStart: (_) => _handlePinchStart(),
+                        onScaleUpdate: _handlePinchUpdate,
+                        onScaleEnd: (_) => _handlePinchEnd(),
+                        child: IgnorePointer(
+                          ignoring: _isLocked,
+                          child: SfPdfViewer.memory(
+                            snapshot.data!,
+                            controller: _pdfController,
+                            canShowScrollHead: true,
+                            canShowScrollStatus: true,
+                            pageLayoutMode: PdfPageLayoutMode.single,
+                            scrollDirection: _scrollDirection,
+                            initialZoomLevel: _currentZoomLevel,
+                            enableDocumentLinkAnnotation: false,
+                            enableTextSelection: false,
+                            onDocumentLoaded: (_) {
+                              if (mounted) setState(() => _isRendered = true);
+                            },
+                            onDocumentLoadFailed: (_) {
+                              if (mounted) setState(() => _renderError = true);
+                            },
                           ),
                         ),
+                      ),
+                      if (_renderError)
+                        Center(child: PdfErrorView(
+                          theme: theme,
+                          colorScheme: colorScheme,
+                          onRetry: () => setState(() {
+                            _renderError = false;
+                            _isRendered = false;
+                            _pdfData = null;
+                            _initializePdfLoader();
+                          }),
+                        )),
                       if (_isRendered && !_renderError)
                         PdfControls(
                           isFullScreen: _isFullScreen,
                           isLocked: _isLocked,
                           onToggleFullScreen: _toggleFullScreen,
-                          onToggleLock: () {
-                            setState(() {
-                              _isLocked = !_isLocked;
-                            });
-                          },
+                          onToggleLock: () => setState(() => _isLocked = !_isLocked),
                           onUnrotate: _isFullScreen ? () async {
                             await _setNormalOrientation();
-                            setState(() {
-                              _isFullScreen = false;
-                              _isLocked = false;
-                            });
+                            if (mounted) setState(() => _isFullScreen = false);
                           } : null,
                         ),
                     ],
                   );
                 }
+
                 return Center(
-                  child: CircularProgressIndicator(
-                    color: colorScheme.primary,
-                  ),
+                  child: CircularProgressIndicator(color: colorScheme.primary),
                 );
               },
             ),
@@ -391,4 +390,3 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> with WidgetsBindingOb
     );
   }
 }
-

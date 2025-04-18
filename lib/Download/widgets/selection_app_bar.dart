@@ -7,7 +7,6 @@ class SelectionAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onDelete;
   final VoidCallback onClear;
   final VoidCallback onSearch;
-  final bool isTablet;
 
   const SelectionAppBar({
     super.key,
@@ -17,7 +16,6 @@ class SelectionAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onDelete,
     required this.onClear,
     required this.onSearch,
-    required this.isTablet,
   });
 
   @override
@@ -27,31 +25,33 @@ class SelectionAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: isSelectionMode
           ? Text('$selectedCount selected')
-          : Text(
+          : const Text(
         'Downloaded Books',
-        style: TextStyle(fontSize: isTablet ? 24 : 20, color: Colors.white),
+        style: TextStyle(color: Colors.white),
       ),
       backgroundColor: isSelectionMode
-          ? isDarkMode ? Colors.grey[800] : Colors.grey[700]
+          ? isDarkMode
+          ? Colors.grey[800]
+          : Colors.grey[700]
           : Colors.blueAccent,
       iconTheme: const IconThemeData(color: Colors.white),
       actions: [
         if (isSelectionMode) ...[
           IconButton(
-            icon: Icon(Icons.select_all, size: isTablet ? 32 : 24),
+            icon: const Icon(Icons.select_all),
             onPressed: onSelectAll,
           ),
           IconButton(
-            icon: Icon(Icons.delete, size: isTablet ? 32 : 24),
+            icon: const Icon(Icons.delete),
             onPressed: onDelete,
           ),
           IconButton(
-            icon: Icon(Icons.close, size: isTablet ? 32 : 24),
+            icon: const Icon(Icons.close),
             onPressed: onClear,
           ),
         ] else ...[
           IconButton(
-            icon: Icon(Icons.search, size: isTablet ? 32 : 24),
+            icon: const Icon(Icons.search),
             onPressed: onSearch,
           ),
         ],

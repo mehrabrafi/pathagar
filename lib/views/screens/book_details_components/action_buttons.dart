@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../controllers/book_controller.dart';
 import '../../../models/book.dart';
 import '../pdf_viewer_page.dart';
@@ -79,12 +78,14 @@ class _ActionButtonsState extends State<ActionButtons> {
   }
 
   Future<void> _loadBookStatus() async {
-    final bookmarked = await widget.bookController.isBookmarked(widget.book);
-    final downloaded = await widget.bookController.isBookDownloaded(widget.book);
+    final bookmarked = widget.bookController.isBookmarked(widget.book);
+    final isDownloaded = await widget.bookController.isBookDownloaded(widget.book);
+    final downloadedBook = await widget.bookController.getDownloadedBook(widget.book.id);
+
     if (mounted) {
       setState(() {
         _isBookmarked = bookmarked;
-        _isDownloaded = downloaded;
+        _isDownloaded = isDownloaded;
         _downloadProgress = DownloadTracker().getProgress(widget.book.id) ?? 0;
       });
     }
@@ -128,9 +129,6 @@ class _ActionButtonsState extends State<ActionButtons> {
           DownloadTracker().updateProgress(widget.book.id, progress);
         },
       );
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('downloaded_${widget.book.id}', true);
 
       if (mounted) {
         setState(() {
@@ -184,21 +182,20 @@ class _ActionButtonsState extends State<ActionButtons> {
         ),
       );
     } else {
-      // Show temporary message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Download will start now. Please wait...'),
+        const SnackBar(
+          content: Text('Download will start now. Please wait...'),
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
         ),
       );
 
-      // Start download after a small delay to let the user see the message
       Future.delayed(const Duration(milliseconds: 500), () {
         _downloadBook();
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final isDownloading = _downloadProgress > 0 && _downloadProgress < 1;
@@ -343,10 +340,10 @@ class _ActionButtonsState extends State<ActionButtons> {
                       : isDownloading
                       ? Icons.downloading
                       : Icons.download,
-                  size: 28, // Match other icon sizes
+                  size: 28,
                 ),
                 color: _isDownloaded
-                    ? Colors.red
+                    ? Colors.green
                     : isDownloading
                     ? Colors.blueAccent
                     : theme.textTheme.bodyLarge?.color,
@@ -357,13 +354,14 @@ class _ActionButtonsState extends State<ActionButtons> {
           Text(
             _isDownloaded ? 'Downloaded' : 'Download',
             style: TextStyle(
-              fontSize: 12, // Match other text sizes
+              fontSize: 12,
               color: _isDownloaded
-                  ? colorScheme.primary
+                  ? Colors.green
                   : theme.textTheme.bodyLarge?.color,
             ),
           ),
         ],
       ),
     );
-  }}
+  }
+}
